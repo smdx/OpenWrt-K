@@ -718,8 +718,7 @@ jobs:
 
       - name: fullcone 配置
         working-directory: ${{ env.OPENWRT_ROOT_PATH }}
-        run: |
-          echo "::notice :: 配置初始化开启FullCone-NAT"
+        run: |       
           cat > $OPENWRT_ROOT_PATH/files/etc/uci-defaults/zzz-fullcone << "EOF"
           #!/bin/sh
           uci set firewall.@defaults[0].fullcone="1"
@@ -728,6 +727,7 @@ jobs:
           /etc/init.d/firewall restart
           exit 0
           EOF
+          echo "::notice :: 配置初始化开启FullCone-NAT"
           
       - name: 检查剩余空间
         run: |
