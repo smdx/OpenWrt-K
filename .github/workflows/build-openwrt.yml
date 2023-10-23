@@ -25,7 +25,7 @@
 name: Build OpenWrt-K
 on:
   schedule:
-    - cron: '0 4 * * *'
+    - cron: '0 0 * * 1'
 #  push:
 #    branches:
 #      - main
@@ -93,7 +93,7 @@ jobs:
           echo "CMZJ_PACKAGE_ROOT_PATH=$CMZJ_PACKAGE_ROOT_PATH" >> $GITHUB_ENV
           echo "CMZJ_PATCH_ROOT_PATH=$CMZJ_PATCH_ROOT_PATH" >> $GITHUB_ENV
           mkdir -p $CMZJ_PATCH_ROOT_PATH/{firewall4,libnftnl,nftables}/patches/
-          mkdir -p $CMZJ_PATCH_ROOT_PATH/{dnsmasq,libubox,netdata}
+          mkdir -p $CMZJ_PATCH_ROOT_PATH/{dnsmasq,libubox}
           mkdir -p $CMZJ_PATCH_ROOT_PATH/{hack,pending}-{5.10,5.15,6.1}
 
       - name: 克隆补丁所需源代码
@@ -213,7 +213,6 @@ jobs:
           cp $DOWNLOAD_ROOT_PATH/patch/lede/target/linux/generic/pending-5.10/613-netfilter_optional_tcp_window_check.patch $CMZJ_PATCH_ROOT_PATH/pending-5.10/
           cp $DOWNLOAD_ROOT_PATH/patch/lede/target/linux/generic/pending-5.15/613-netfilter_optional_tcp_window_check.patch $CMZJ_PATCH_ROOT_PATH/pending-5.15/
           cp $DOWNLOAD_ROOT_PATH/patch/lede/target/linux/generic/pending-6.1/613-netfilter_optional_tcp_window_check.patch $CMZJ_PATCH_ROOT_PATH/pending-6.1/
-          cp -RT $DOWNLOAD_ROOT_PATH/patch/immortalwrt-packages/admin/netdata $CMZJ_PATCH_ROOT_PATH/netdata
           echo "FIREWALL4_VERSION=firewall4-$(grep -o 'FIREWALL4_VERSION=.*' $DOWNLOAD_ROOT_PATH/patch/turboacc/version | cut -d '=' -f 2)"
           echo "NFTABLES_VERSION=libnftnl-$(grep -o 'NFTABLES_VERSION=.*' $DOWNLOAD_ROOT_PATH/patch/turboacc/version | cut -d '=' -f 2)"
           echo "LIBNFTNL_VERSION=nftables-$(grep -o 'LIBNFTNL_VERSION=.*' $DOWNLOAD_ROOT_PATH/patch/turboacc/version | cut -d '=' -f 2)"
@@ -350,10 +349,10 @@ jobs:
           mv $WORKINGDIR/luci-app-smartdns-${LUCIBRANCH}/* $WORKINGDIR/
           rmdir $WORKINGDIR/luci-app-smartdns-${LUCIBRANCH}
           rm $WORKINGDIR/${LUCIBRANCH}.zip
-          WORKINGDIR="$OPENWRT_ROOT_PATH/feeds/packages/admin/netdata"
-          mkdir $WORKINGDIR -p
-          rm $WORKINGDIR/* -fr
-          cp -RT $CMZJ_PATCH_ROOT_PATH/netdata $WORKINGDIR
+       #  WORKINGDIR="$OPENWRT_ROOT_PATH/feeds/packages/admin/netdata"
+       #  mkdir $WORKINGDIR -p
+       #  rm $WORKINGDIR/* -fr
+       #  cp -RT $CMZJ_PATCH_ROOT_PATH/netdata $WORKINGDIR
 
       - name: 安装 feeds
         working-directory: ${{ env.OPENWRT_ROOT_PATH }}
@@ -714,6 +713,19 @@ jobs:
           sed -i -e "s/set system.@system\[-1].hostname='OpenWrt'/set system.@system\[-1].hostname='OpenWrt-k'/g" -e "s/set system.@system\[-1].timezone='UTC'/set system.@system\[-1].timezone=\'$timezone\'/g" -e "/set system.@system\[-1].timezone='CST-8'/i\		set system.@system\[-1].zonename=\'$zonename\'" $OPENWRT_ROOT_PATH/package/base-files/files/bin/config_generate
           sed -i "s#^uci set network.lan.ipaddr=.*#uci set network.lan.ipaddr=\"$ipaddr\"#g"  $OPENWRT_ROOT_PATH/files/etc/uci-defaults/zzz-chenmozhijin
 
+      - name: fullcone 配置
+        working-directory: ${{ env.OPENWRT_ROOT_PATH }}
+        run: |       
+          cat > $OPENWRT_ROOT_PATH/files/etc/uci-defaults/zzz-fullcone << "EOF"
+          #!/bin/sh
+          uci set firewall.@defaults[0].fullcone="1"
+          uci commit firewall
+          /etc/init.d/dnsmasq restart
+          /etc/init.d/firewall restart
+          exit 0
+          EOF
+          echo "::notice :: 配置初始化开启FullCone-NAT"
+          
       - name: 检查剩余空间
         run: |
           echo "======================="
