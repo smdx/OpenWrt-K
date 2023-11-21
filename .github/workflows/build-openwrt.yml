@@ -93,7 +93,7 @@ jobs:
           echo "CMZJ_PACKAGE_ROOT_PATH=$CMZJ_PACKAGE_ROOT_PATH" >> $GITHUB_ENV
           echo "CMZJ_PATCH_ROOT_PATH=$CMZJ_PATCH_ROOT_PATH" >> $GITHUB_ENV
           mkdir -p $CMZJ_PATCH_ROOT_PATH/{firewall4,libnftnl,nftables}/patches/
-          mkdir -p $CMZJ_PATCH_ROOT_PATH/{dnsmasq,libubox,netdata}
+          mkdir -p $CMZJ_PATCH_ROOT_PATH/{dnsmasq,libubox}
           mkdir -p $CMZJ_PATCH_ROOT_PATH/{hack,pending}-{5.10,5.15,6.1}
 
       - name: 克隆补丁所需源代码
@@ -213,7 +213,6 @@ jobs:
           cp $DOWNLOAD_ROOT_PATH/patch/lede/target/linux/generic/pending-5.10/613-netfilter_optional_tcp_window_check.patch $CMZJ_PATCH_ROOT_PATH/pending-5.10/
           cp $DOWNLOAD_ROOT_PATH/patch/lede/target/linux/generic/pending-5.15/613-netfilter_optional_tcp_window_check.patch $CMZJ_PATCH_ROOT_PATH/pending-5.15/
           cp $DOWNLOAD_ROOT_PATH/patch/lede/target/linux/generic/pending-6.1/613-netfilter_optional_tcp_window_check.patch $CMZJ_PATCH_ROOT_PATH/pending-6.1/
-          cp -RT $DOWNLOAD_ROOT_PATH/patch/immortalwrt-packages/admin/netdata $CMZJ_PATCH_ROOT_PATH/netdata
           echo "FIREWALL4_VERSION=firewall4-$(grep -o 'FIREWALL4_VERSION=.*' $DOWNLOAD_ROOT_PATH/patch/turboacc/version | cut -d '=' -f 2)"
           echo "NFTABLES_VERSION=libnftnl-$(grep -o 'NFTABLES_VERSION=.*' $DOWNLOAD_ROOT_PATH/patch/turboacc/version | cut -d '=' -f 2)"
           echo "LIBNFTNL_VERSION=nftables-$(grep -o 'LIBNFTNL_VERSION=.*' $DOWNLOAD_ROOT_PATH/patch/turboacc/version | cut -d '=' -f 2)"
@@ -331,7 +330,7 @@ jobs:
           sed -i 's/256/1024/' ./target/linux/${{ matrix.target }}/image/Makefile
           bash $GITHUB_WORKSPACE/scripts/fix_problem.sh ${{ matrix.config }}
 
-      - name: 更新smartdns、netdata
+      - name: 更新smartdns
         run: |
           WORKINGDIR="$OPENWRT_ROOT_PATH/feeds/packages/net/smartdns"
           mkdir $WORKINGDIR -p
@@ -350,10 +349,6 @@ jobs:
           mv $WORKINGDIR/luci-app-smartdns-${LUCIBRANCH}/* $WORKINGDIR/
           rmdir $WORKINGDIR/luci-app-smartdns-${LUCIBRANCH}
           rm $WORKINGDIR/${LUCIBRANCH}.zip
-          WORKINGDIR="$OPENWRT_ROOT_PATH/feeds/packages/admin/netdata"
-          mkdir $WORKINGDIR -p
-          rm $WORKINGDIR/* -fr
-          cp -RT $CMZJ_PATCH_ROOT_PATH/netdata $WORKINGDIR
 
       - name: 安装 feeds
         working-directory: ${{ env.OPENWRT_ROOT_PATH }}
