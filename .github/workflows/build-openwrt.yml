@@ -693,6 +693,19 @@ jobs:
           sed -i -e "s/set system.@system\[-1].hostname='OpenWrt'/set system.@system\[-1].hostname='OpenWrt-k'/g" -e "s/set system.@system\[-1].timezone='UTC'/set system.@system\[-1].timezone=\'$timezone\'/g" -e "/set system.@system\[-1].timezone='CST-8'/i\		set system.@system\[-1].zonename=\'$zonename\'" $OPENWRT_ROOT_PATH/package/base-files/files/bin/config_generate
           sed -i "s#^uci set network.lan.ipaddr=.*#uci set network.lan.ipaddr=\"$ipaddr\"#g"  $OPENWRT_ROOT_PATH/files/etc/uci-defaults/zzz-chenmozhijin
 
+      - name: FullCone 配置
+        working-directory: ${{ env.OPENWRT_ROOT_PATH }}
+        run: |       
+          cat > $OPENWRT_ROOT_PATH/files/etc/uci-defaults/zzz-fullcone << "EOF"
+          #!/bin/sh
+          uci set firewall.@defaults[0].fullcone="1"
+          uci commit firewall
+          /etc/init.d/dnsmasq restart
+          /etc/init.d/firewall restart
+          exit 0
+          EOF
+          echo "::notice :: 配置初始化开启FullCone-NAT"
+          
       - name: 替换golang版本
         working-directory: ${{ env.OPENWRT_ROOT_PATH }}
         run: |
