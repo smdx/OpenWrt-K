@@ -25,7 +25,7 @@
 name: Build OpenWrt-K
 on:
   schedule:
-    - cron: '0 4 * * *'
+    - cron: '0 0 * * 1'
 #  push:
 #    branches:
 #      - main
@@ -331,7 +331,7 @@ jobs:
           sed -i 's/256/1024/' ./target/linux/${{ matrix.target }}/image/Makefile
           bash $GITHUB_WORKSPACE/scripts/fix_problem.sh ${{ matrix.config }}
 
-      - name: 更新smartdns、netdata
+      - name: 更新smartdns
         run: |
           WORKINGDIR="$OPENWRT_ROOT_PATH/feeds/packages/net/smartdns"
           mkdir $WORKINGDIR -p
@@ -350,10 +350,6 @@ jobs:
           mv $WORKINGDIR/luci-app-smartdns-${LUCIBRANCH}/* $WORKINGDIR/
           rmdir $WORKINGDIR/luci-app-smartdns-${LUCIBRANCH}
           rm $WORKINGDIR/${LUCIBRANCH}.zip
-          WORKINGDIR="$OPENWRT_ROOT_PATH/feeds/packages/admin/netdata"
-          mkdir $WORKINGDIR -p
-          rm $WORKINGDIR/* -fr
-          cp -RT $CMZJ_PATCH_ROOT_PATH/netdata $WORKINGDIR
 
       - name: 安装 feeds
         working-directory: ${{ env.OPENWRT_ROOT_PATH }}
