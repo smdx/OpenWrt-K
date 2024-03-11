@@ -1328,15 +1328,7 @@ jobs:
             ${{ env.UPLOAD_ROOT_PATH }}/${{ matrix.target }}/${{ matrix.subtarget }}/*
             ${{ env.UPLOAD_ROOT_PATH }}/package-upload/*
           body_path: ${{ env.UPLOAD_ROOT_PATH }}/release.txt
-
-      - name: Delete workflow runs
-        uses: smdx/delete-workflow-runs@main
-        with:
-          retain_days: 30
-          keep_minimum_runs: 5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+  
       - name: 删除旧的Releases
         uses: dev-drprasad/delete-older-releases@v0.3.2
         with:
