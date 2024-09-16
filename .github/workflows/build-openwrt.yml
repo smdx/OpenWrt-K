@@ -25,7 +25,7 @@
 name: Build OpenWrt-K
 on:
   schedule:
-    - cron: '0 4 * * *'
+    - cron: '0 0 * * 1'
 #  push:
 #    branches:
 #      - main
@@ -338,7 +338,7 @@ jobs:
           sed -i 's/256/1024/' ./target/linux/${{ matrix.target }}/image/Makefile
           bash $GITHUB_WORKSPACE/scripts/fix_problem.sh ${{ matrix.config }}
 
-      - name: 更新smartdns、netdata
+      - name: 更新smartdns
         run: |
           WORKINGDIR="$OPENWRT_ROOT_PATH/feeds/packages/net/smartdns"
           mkdir $WORKINGDIR -p
@@ -357,10 +357,6 @@ jobs:
           mv $WORKINGDIR/luci-app-smartdns-${LUCIBRANCH}/* $WORKINGDIR/
           rmdir $WORKINGDIR/luci-app-smartdns-${LUCIBRANCH}
           rm $WORKINGDIR/${LUCIBRANCH}.zip
-          WORKINGDIR="$OPENWRT_ROOT_PATH/feeds/packages/admin/netdata"
-          mkdir $WORKINGDIR -p
-          rm $WORKINGDIR/* -fr
-          cp -RT $CMZJ_PATCH_ROOT_PATH/netdata $WORKINGDIR
 
       - name: 安装 feeds
         working-directory: ${{ env.OPENWRT_ROOT_PATH }}
@@ -713,6 +709,19 @@ jobs:
           sed -i -e "s/set system.@system\[-1].hostname='OpenWrt'/set system.@system\[-1].hostname='OpenWrt-k'/g" -e "s/set system.@system\[-1].timezone='UTC'/set system.@system\[-1].timezone=\'$timezone\'/g" -e "/set system.@system\[-1].timezone='CST-8'/i\		set system.@system\[-1].zonename=\'$zonename\'" $OPENWRT_ROOT_PATH/package/base-files/files/bin/config_generate
           sed -i "s#^uci set network.lan.ipaddr=.*#uci set network.lan.ipaddr=\"$ipaddr\"#g"  $OPENWRT_ROOT_PATH/files/etc/uci-defaults/zzz-chenmozhijin
 
+      - name: FullCone 配置
+        working-directory: ${{ env.OPENWRT_ROOT_PATH }}
+        run: |       
+          cat > $OPENWRT_ROOT_PATH/files/etc/uci-defaults/zzz-fullcone << "EOF"
+          #!/bin/sh
+          uci set firewall.@defaults[0].fullcone="1"
+          uci commit firewall
+          /etc/init.d/dnsmasq restart
+          /etc/init.d/firewall restart
+          exit 0
+          EOF
+          echo "::notice :: 配置初始化开启FullCone-NAT"
+          
       - name: 替换golang版本
         working-directory: ${{ env.OPENWRT_ROOT_PATH }}
         run: |
