@@ -24,8 +24,8 @@
 
 name: Build OpenWrt-K
 on:
-  schedule:
-    - cron: '0 0 * * 1'
+#  schedule:
+#    - cron: '0 0 * * 1'
 #  push:
 #    branches:
 #      - main
